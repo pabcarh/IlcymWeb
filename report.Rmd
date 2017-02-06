@@ -1,0 +1,227 @@
+---
+title: "Dynamic report"
+output: html_document
+params:
+  n: NA
+---
+* __List of the Life Stages:__
+    + Stages:
+    ```{r html_table1, results='asis', echo=FALSE, message=FALSE}
+library(htmlTable)
+stagesV<-paste(params$estadios,"......",sep="")
+tab0<-matrix(stagesV,1,length(stagesV))
+htmlTable(tab0,cgroup = c("Inmature", "Adults"),n.cgroup = c(length(stagesV)-2,2))
+```
+
+
+* __Development Time:__
+    + Models selected:
+    ```{r html_table2, results='asis', echo=FALSE, message=FALSE}
+modelsV<-paste(c(params$hfeno$distri_dv,params$hfeno$distri_snh,params$hfeno$distri_snm),"......",sep="")
+tab0<-matrix(modelsV,1,length(modelsV))
+htmlTable(tab0,cgroup = c("Inmature", "Adults"),n.cgroup = c(length(modelsV)-2,2))
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/DevelopmentTime",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp <- readImage(filesFigs[i])
+  display(img.temp[,,],method = "raster")
+}
+#plot(rnorm(10))
+```
+
+
+* __Development Rate:__
+    + Models selected:
+    ```{r html_table3, results='asis', echo=FALSE, message=FALSE, useViewer = FALSE}
+modelsV<-params$hfeno$pdv_dv
+modelsE<-params$hfeno$fdv_dv
+for(i in 1:length(modelsV))
+{ options(htmlTable.cat = TRUE)
+  # if(!is.matrix(modelsV[[i]]))
+  # {
+  #   temp1<-matrix((c(do.call("cbind", modelsV[[i]][1,]))),1,length(modelsV[[i]]))
+  #   Cnames<-names(modelsV[[i]])
+  # }else{
+    temp1<-matrix(c(modelsV[[i]]),1,length(modelsV[[i]]))
+    Cnames<-names(modelsV[[i]])
+  # }
+  print(htmlTable(temp1,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  #temp2<-matrix(paste(modelsE[[i]][[2]],modelsE[[i]][[1]],modelsE[[i]][[3]],sep=" ")[3],1,1)
+  Equat<-paste(modelsE[[i]][[2]],modelsE[[i]][[1]],gsub("~, y,", "",toString(modelsE[[i]])),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+  cat("<p>",Equat,"</p>")
+
+  if(i!=length(modelsV)){cat("<p>...................................................................................................................................</p>")}
+}
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/DevelopmentRate",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp1 <- readImage(filesFigs[i])
+  display(img.temp1,method = "raster")
+}
+```
+
+
+* __Senescence:__
+    + Models selected:
+    ```{r html_table4, results='asis', echo=FALSE, message=FALSE, useViewer = FALSE}
+modelsV1<-params$hfeno$pfh_h
+modelsE1<-params$hfeno$fh_h
+
+modelsV2<-params$hfeno$pfm_m
+modelsE2<-params$hfeno$fm_m
+
+options(htmlTable.cat = TRUE)
+  temp1<-matrix(c(modelsV1),1,length(modelsV1))
+  Cnames<-names(modelsV1)
+  print(htmlTable(temp1,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  #temp2<-matrix(paste(modelsE1[[2]],modelsE1[[1]],modelsE1[[3]],sep=" ")[3],1,1)
+  Equat<-paste(modelsE1[[2]],modelsE1[[1]],gsub("~, y,", "",toString(modelsE1)),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+  #temp2<-matrix((Equat[(nchar(Equat)==max(nchar(Equat)))])[1],1,1)
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+    cat("<p>",Equat,"</p>")
+  cat("<p>...................................................................................................................................</p>")
+  temp1<-matrix(c(modelsV2),1,length(modelsV2))
+  Cnames<-names(modelsV2)
+  print(htmlTable(temp1,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  #temp2<-matrix(paste(modelsE2[[2]],modelsE2[[1]],modelsE2[[3]],sep=" ")[3],1,1)
+  Equat<-paste(modelsE2[[2]],modelsE2[[1]],gsub("~, y,", "",toString(modelsE2)),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+  #temp2<-matrix((Equat[(nchar(Equat)==max(nchar(Equat)))])[1],1,1)
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+    cat("<p>",Equat,"</p>")
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/Senescence",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp1 <- readImage(filesFigs[i])
+  display(img.temp1,method = "raster")
+}
+```
+
+
+
+* __Mortality:__
+    + Models selected:
+    ```{r html_table5, results='asis', echo=FALSE, message=FALSE, useViewer = FALSE}
+modelsV<-params$hfeno$pmortal
+modelsE<-params$hfeno$mortal
+for(i in 1:length(modelsV))
+{ options(htmlTable.cat = TRUE)
+    temp2<-matrix(c(modelsV[[i]]),1,length(modelsV[[i]]))
+    Cnames<-names(modelsV[[i]])
+  print(htmlTable(temp2,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  #Equat<-paste(modelsE[[i]][[2]],modelsE[[i]][[1]],modelsE[[i]][[3]],sep=" ")
+  Equat<-paste(modelsE[[i]][[2]],modelsE[[i]][[1]],gsub("~, y,", "",toString(modelsE[[i]])),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+  #if(i!=length(modelsV)){cat("<p>Next stage</p>")}
+    cat("<p>",Equat,"</p>")
+
+  if(i!=length(modelsV)){cat("<p>...................................................................................................................................</p>")}
+}
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/Mortality",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp1 <- readImage(filesFigs[i])
+  display(img.temp1,method = "raster")
+}
+```
+
+
+* __Total Oviposition:__
+    + Models selected:
+    ```{r html_table6, results='asis', echo=FALSE, message=FALSE, useViewer = FALSE}
+modelsV1<-params$hfeno$ptazaeh_h
+modelsE1<-params$hfeno$ftazaeh_h
+
+options(htmlTable.cat = TRUE)
+  temp1<-matrix(c(modelsV1),1,length(modelsV1))
+  Cnames<-names(modelsV1)
+  print(htmlTable(temp1,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  Equat<-paste(modelsE1[[2]],modelsE1[[1]],gsub("~, y,", "",toString(modelsE1)),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+    cat("<p>",Equat,"</p>")
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/TotalOviposition",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp1 <- readImage(filesFigs[i])
+  display(img.temp1,method = "raster")
+}
+```
+
+
+
+* __Relative Oviposition:__
+    + Models selected:
+    ```{r html_table7, results='asis', echo=FALSE, message=FALSE, useViewer = FALSE}
+modelsV1<-params$hfeno$povih_h
+modelsE1<-params$hfeno$fovih_h
+
+options(htmlTable.cat = TRUE)
+  temp1<-matrix(c(modelsV1),1,length(modelsV1))
+  Cnames<-names(modelsV1)
+  print(htmlTable(temp1,cgroup=Cnames,n.cgroup=rep(1,length(Cnames))))
+  Equat<-paste(modelsE1[[2]],modelsE1[[1]],gsub("~, y,", "",toString(modelsE1)),sep=" ")
+  #temp2<-matrix(Equat,1,1)
+  #print(htmlTable(temp2,cgroup="equation",n.cgroup=1))
+    cat("<p>",Equat,"</p>")
+
+```
+    
+    
+    - Plots:
+    
+```{r, echo=FALSE, message=FALSE}
+library(EBImage)
+#path<-"D:/LH/Paratrioza-Cohort-2016"
+filesFigs<-list.files(paste(path,"/RelativeOviposition",sep=""),pattern = ".jpg", full.names = TRUE)
+for(i in 1:length(filesFigs))
+{
+  img.temp1 <- readImage(filesFigs[i])
+  display(img.temp1,method = "raster")
+}
+```
