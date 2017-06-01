@@ -26,6 +26,8 @@ shinyServer(function(input, output, session) {
       dir.create(paste(path,"/",namePJ,"/DeterministicSimulation",sep=""))
       dir.create(paste(path,"/",namePJ,"/GeographicalSimulation",sep=""))
       dir.create(paste(path,"/",namePJ,"/ModelValidation",sep=""))
+      dir.create(paste(path,"/",namePJ,"/Transmission",sep=""))
+      dir.create(paste(path,"/",namePJ,"/TransmissionSimulation",sep=""))
       updateTextInput(session, "directory", value=path)
       write.table(PJdescrip,paste(path,"/",namePJ,"/",namePJ,".ilcym",sep=""),row.names = FALSE,col.names = FALSE,sep="\t")
     })
@@ -99,7 +101,8 @@ shinyServer(function(input, output, session) {
                  "Mortality" = "images/GrayScale_moralityicon2.png",
                  "Senescence" = "images/GrayScale_senesicon3.png",
                  "Total Oviposition" = "images/GrayScale_totalicon.png",
-                 "Relative Oviposition" = "images/GrayScale_relativeicon2.png"
+                 "Relative Oviposition" = "images/GrayScale_relativeicon2.png",
+                 "Transmission Rate" = "images/GrayScale_transmRate.png"
     )
     
     if (path != "no project selected"){
@@ -176,7 +179,7 @@ shinyServer(function(input, output, session) {
   output$choicesMB5 <- renderUI({
     ModSelected<-input$modules
     path<-input$directory2
-    modelo1 <- switch(ModSelected,"Development Time"=input$modelo,"Development Rate"=input$modelo$right,"Mortality"=input$modelo$right,"Senescence"=input$modelo$right,"Total Oviposition"=input$modelo$right,"Relative Oviposition"=input$modelo$right)
+    modelo1 <- switch(ModSelected,"Development Time"=input$modelo,"Development Rate"=input$modelo$right,"Mortality"=input$modelo$right,"Senescence"=input$modelo$right,"Total Oviposition"=input$modelo$right,"Relative Oviposition"=input$modelo$right,"Transmission Rate"=input$modelo$right)
     
     if (length(modelo1) == 1 & path != "no project selected" & !is.null(path)){
       actionButton("doS", "Save",icon=icon("floppy-o"))
@@ -190,7 +193,7 @@ shinyServer(function(input, output, session) {
     ModSelected<-input$modules
     path<-input$directory2
     
-    modelo1 <- switch(ModSelected,"Development Time"=input$modelo,"Development Rate"=input$modelo$right,"Mortality"=input$modelo$right,"Senescence"=input$modelo$right,"Total Oviposition"=input$modelo$right,"Relative Oviposition"=input$modelo$right)
+    modelo1 <- switch(ModSelected,"Development Time"=input$modelo,"Development Rate"=input$modelo$right,"Mortality"=input$modelo$right,"Senescence"=input$modelo$right,"Total Oviposition"=input$modelo$right,"Relative Oviposition"=input$modelo$right,"Transmission Rate"=input$modelo$right)
 
     if (length(modelo1) == 1 & path != "no project selected"){
       plotOutput("plot")
@@ -311,6 +314,21 @@ shinyServer(function(input, output, session) {
           RelOvi(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny)
         #updateCheckboxInput(session, "saveSelec", value = FALSE)
       }
+      
+      if (ModSelected == "Transmission Rate"){
+        source('lib/dev_rate_new.r')
+        
+        path<-input$directory2
+        modelo<-req(input$modelo$right)
+        nx<-req(input$nx)
+        ny<-req(input$ny)
+        PosModel<-1
+        Namflucfile<-req(input$transmfile)
+        
+        TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=TRUE,nx,ny)
+        #updateCheckboxInput(session, "saveSelec", value = FALSE)
+      }
+      
     
     }) # ending progress
     
@@ -413,6 +431,22 @@ shinyServer(function(input, output, session) {
         
           RelOvi(path,est,modelo,PosModel,OPTplot=FALSE,nx,ny)
 
+        #updateCheckboxInput(session, "saveSelec", value = FALSE)
+      }
+      
+      if (ModSelected == "Transmission Rate"){
+        source('lib/dev_rate_new.r')
+        
+        path<-input$directory2
+        est<-input$estadio
+        modelo<-input$modelo$right
+        nx<-input$nx
+        ny<-input$ny
+        PosModel<-1
+        Namflucfile<-req(input$transmfile)
+        
+          TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=FALSE,nx,ny)
+        
         #updateCheckboxInput(session, "saveSelec", value = FALSE)
       }
       
@@ -540,6 +574,28 @@ shinyServer(function(input, output, session) {
           RelOvi(path,est,modelo,PosModel,OPTplot=FALSE,nx,ny)
           sink()
         }
+        
+        if (ModSelected == "Transmission Rate"){
+          source('lib/dev_rate_new.r')
+          
+          path<-input$directory2
+          modelo<-req(input$modelo$right)
+          nx<-req(input$nx)
+          ny<-req(input$ny)
+          PosModel<-1
+          Namflucfile<-req(input$transmfile)
+          saveSelec<-TRUE
+
+          TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=TRUE,nx,ny,saveSelec=saveSelec)
+          
+          jpeg(paste(path,"/Transmission/","TranssRate",".jpg",sep=""), width = 7, height = 6, units = 'in', res = 400)
+          TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=TRUE,nx,ny,saveSelec=saveSelec)
+          dev.off()
+          sink(paste(path,"/Transmission/","TranssRate",".txt",sep=""))
+          TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=FALSE,nx,ny,saveSelec=saveSelec)
+          sink()
+        }
+
         setProgress(1)
       })
   })
@@ -558,28 +614,35 @@ shinyServer(function(input, output, session) {
                                                                style <- isolate(input$style);
                                                                withProgress(message = 'Processing the modeling', style = style, value = 0.1, {
                                                                path<-input$directory2;
-                                                               est<-req(input$estadio);
+                                                               #est<-req(input$estadio);
+                                                               if(ModSelected!="Transmission Rate"){est<-req(input$estadio)}else{est<-"Adult"};
                                                                modelo<-req(input$modelo$right);
                                                                nx<-req(input$nx);
                                                                ny<-req(input$ny);
+                                                               #Namflucfile<-req(input$transmfile);
+							       if(ModSelected=="Transmission Rate"){Namflucfile<-req(input$transmfile)};
                                                                PosModel<-imas;OPTplot<-TRUE;
+                                                               
                                                                switch(ModSelected,
                                                                                   "Development Rate" = source('lib/dev_rate_new.r'),
                                                                                   "Mortality" = source('lib/mortality.r'),
                                                                                   "Senescence" = source('lib/senescence.r'),
                                                                                   "Total Oviposition" = source('lib/totalOviposition.r'),
-                                                                                  "Relative Oviposition" = source('lib/relativeOviposition.r')
+                                                                                  "Relative Oviposition" = source('lib/relativeOviposition.r'),
+                                                                                  "Transmission Rate" = source('lib/dev_rate_new.r')
                                                                );
                                                                incProgress(0.5,message = "estimating model parameters")
+                                                               #sink("D:/BORRAR-1.txt");print(ModSelected);print(Namflucfile);sink();
                                                                ObjsR<-  switch(ModSelected,
                                                                                "Development Time" = DevTime(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
                                                                                "Development Rate" = DevRate(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
                                                                                "Mortality" = DevMort(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
                                                                                "Senescence" = DevSenes(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
                                                                                "Total Oviposition" = DevTotOvi(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
-                                                                               "Relative Oviposition" = RelOvi(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny)
+                                                                               "Relative Oviposition" = RelOvi(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny),
+                                                                               "Transmission Rate" = TransmRate(path,Namflucfile,modelo,PosModel,OPTplot=TRUE,nx,ny)
                                                                );
-                                                               sink("D:/BORRAR-9.txt");print(ModSelected);sink();
+                                                               #sink("D:/BORRAR-1.txt");print(ModSelected);print(modelo);sink();
                                                                setProgress(1)
                                                                })})}
                                                                }),list(ploti = paste("plot",i,sep=""),imas = i)))
@@ -974,6 +1037,159 @@ shinyServer(function(input, output, session) {
       #GeoSimFluc(dir,Index=NULL,brks=NULL,HistRange=FALSE)#### OJOOOOOOO
       if (path != "no project selected" & !is.null(path)){
         GeoSimFluc(dir,Index=Index,brks=brks)
+      }else{
+        return()
+      }
+    })
+  }, height = 600, width = 800)
+  
+  ##########################################################################################################
+  # Geographic Simulation for Transmission indices
+  
+  observe({
+    if (input$do9 == 0)
+      return()
+    isolate({
+      pathclim<-input$PathClimDatT
+      pathclim = choose.dir(getwd(), "Choose the folder of Tmin and Tmax")
+      pathclim <- gsub("\\\\", "/",pathclim)
+      updateTextInput(session, "PathClimDatT", value=pathclim)
+    })
+    
+  })
+  
+  observe({
+    if (input$do10 == 0)
+      return()
+    isolate({
+      style <- isolate(input$style)
+      withProgress(message = 'Simulating', style = style, value = 0.1, {
+        Sys.sleep(0.35) 
+        
+        library(sp)
+        library(maptools)
+        library(rgdal)
+        source('lib/geo_transmission.R')
+        #source('D:/_BK-D/Pablo/R archivos/shiny-Examples/041-dynamic-ui-ILCYM/lib/geo_transmission.R')
+        
+        
+        pathclim<-input$PathClimDatT
+        #pathclim<-"D:/_BK-D/Pablo/R archivos/shiny-Examples/FLT-Peru-10min-2000/"
+        R<-input$DivExtent
+        #R<-2
+        NameInd<-input$NameFolderIndexT
+        #NameInd<-"Risk Index"
+        path<-input$directory2
+        #path<-"D:/LH/Paratrioza-Cohort-2016"
+        # namePJ<-input$namePJ
+        #namePJ<-"Paratrioza-Cohort-2016"
+        load(paste(path,"/PhenologySims.RData",sep=""))
+        load(paste(path,"/PhenologyStats.RData",sep=""))
+        
+        modelim<-params$modelim
+        modelm<-params$modelm
+        estadios<-params$estadios
+        hfeno<-params$hfeno
+        xi<-params$xi
+        steps<-4
+        
+        x<-report$fenologia$TransmRate$x
+        y<-report$fenologia$TransmRate$y
+        temporal<-do.call("as.list",list(params$transm$ptr_tr))
+        out <- nls(params$transm$ftr_tr, start = temporal, trace = FALSE)
+        rm(x);rm(y)
+        
+        dir1 = paste(pathclim,"/Tmin/",sep="")
+        dir2 = paste(pathclim,"/Tmax/",sep="")
+        temp<-readGDAL(list.files(dir1,pattern=".flt",full.names = TRUE)[1])
+        
+        ilon<-c(bbox(temp)[1,1],bbox(temp)[1,2])
+        ilat<-c(bbox(temp)[2,1],bbox(temp)[2,2])
+        rm(temp)
+        
+        dir.create(paste(path,"/TransmissionSimulation/",NameInd,sep=""))
+        dir.out=paste(path,"/TransmissionSimulation/",NameInd,"/",sep="")
+        
+        name.out <- "mundo-2000"
+        modelim=c(modelim,modelm)
+        filtro=c(-5,45)
+        incProgress(0.2,message = "processing")
+        file<-zone.div(dir1,dir2,ilon,ilat,R,dir.out,name.out=name.out,out=out,method=method,modelim=modelim,modelm=modelm,estadios=estadios,xi=xi,steps=steps, filtro=filtro,hfeno=hfeno)
+        #file<-zone.div(dir1,dir2,ilon,ilat,R,dir.out,name.out=name.out,out,filtro)
+        updateTextInput(session, "NameFolderIndexT", value="Ready")
+        setProgress(1)
+      })
+    })
+    
+  })
+  
+  output$geosimplot0T <- renderPlot({
+    if (input$NameFolderIndexT != "Ready"){
+      return()
+    }else{
+      library(maptools)
+      library(raster)
+      library(colorspace)
+      library(RColorBrewer)
+
+      path<-input$directory2
+      #namePJ<-input$namePJ
+      borrar=file.info(list.dirs(paste(path,"/TransmissionSimulation/",sep=""),full.names=TRUE))
+      dir<-(row.names(subset(borrar,ctime==max(borrar$ctime))))[1] # el mas actual
+      #GeoSimFluc(dir,Index=NULL,brks=NULL,HistRange=FALSE)#### OJOOOOOOO
+      
+      if (path != "no project selected" & !is.null(path)){
+        GeoSimFlucT(dir,HistRange=TRUE)#### OJOOOOOOO
+      }else{
+        return()
+      }
+      
+    }
+  }, height = 400, width = 800)
+  
+  
+  
+  output$geosimplot1T <- renderPlot({
+    if (input$do11 == 0)
+      return()
+    isolate({
+      library(maptools)
+      library(raster)
+      library(colorspace)
+      library(RColorBrewer)
+      
+      path<-input$directory2
+      #namePJ<-input$namePJ
+      borrar=file.info(list.dirs(paste(path,"/TransmissionSimulation/",sep=""),full.names=TRUE))
+      dir<-(row.names(subset(borrar,ctime==max(borrar$ctime))))[1] # the most updated folder
+      Index<-"PT"
+      brks<-input$rangePT
+      if (path != "no project selected" & !is.null(path)){
+        GeoSimFlucT(dir,Index=Index,brks=brks)
+      }else{
+        return()
+      }
+    })
+  }, height = 600, width = 800)
+  
+  output$geosimplot2T <- renderPlot({
+    if (input$do11 == 0)
+      return()
+    isolate({
+      library(maptools)
+      library(raster)
+      library(colorspace)
+      library(RColorBrewer)
+      
+      path<-input$directory2
+      #namePJ<-input$namePJ
+      borrar=file.info(list.dirs(paste(path,"/TransmissionSimulation/",sep=""),full.names=TRUE))
+      dir<-(row.names(subset(borrar,ctime==max(borrar$ctime))))[1] # el mas actual
+      Index<-"PAT"
+      brks<-input$rangePAT
+      #GeoSimFluc(dir,Index=NULL,brks=NULL,HistRange=FALSE)#### OJOOOOOOO
+      if (path != "no project selected" & !is.null(path)){
+        GeoSimFlucT(dir,Index=Index,brks=brks)
       }else{
         return()
       }
