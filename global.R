@@ -28,7 +28,8 @@ ImputEstadios<-function(estadios,ModSelected)
                "Mortality" = selectInput("estadio", h4("Current Stage evaluated:"),choices = estadiosInm),
                "Senescence" = selectInput("estadio", h4("Current Stage evaluated:"),choices = estadiosAdul),
                "Total Oviposition" = selectInput("estadio", h4("Current Stage evaluated:"),choices = estadiosFem),
-               "Relative Oviposition" = selectInput("estadio", h4("Current Stage evaluated:"),choices = estadiosFem)
+               "Relative Oviposition" = selectInput("estadio", h4("Current Stage evaluated:"),choices = estadiosFem),
+               "Transmission Rate" = fileInput('transmfile', h4("Transmission dataset"),accept=c('text/csv','text/comma-separated-values,text/plain','.csv'), multiple = FALSE)
   )
   print(ImEs)
 }
@@ -44,7 +45,8 @@ ImputModelList<-function(ModSelected)
                "Mortality" = chooserInput("modelo", "Available", "Selected", c("Quadratic", "Gaussian","Taylor","Wang 1","Wang 2","Wang 3","Wang 4","Wang 5","Wang 6","Wang 7","Wang 8","Wang 9","Wang 10","Gompertz-Makeham","Sharpe","Weibull","Janisch & Analytis"), c(), size = 12, multiple = TRUE),
                "Senescence" = chooserInput("modelo", "Available", "Selected", c("Shape & DeMichele 11","Shape & DeMichele 12","Shape & DeMichele 13","Shape & DeMichele 14","Exponential simple","Tb Model","Exponential Model","Ratkowsky","Pradham","Davidson","Janish-1","Tanigoshi","Wang-Lan-Ding","Stinner-3","Stinner-4","Logan-3","Hilber y logan 3"), c(), size = 12, multiple = TRUE),
                "Total Oviposition" = chooserInput("modelo", "Available", "Selected", c("Quadratic", "Gaussian","Taylor","Wang 5","Wang 6","Wang 7","Wang 8","Wang 9","Wang 10","Sharpe","Gompertz-Makeham","Weibull","Janisch & Analytis"), c(), size = 12, multiple = TRUE),
-               "Relative Oviposition" = chooserInput("modelo", "Available", "Selected", c("Gamma", "Weibull","Exponential modified 1","Exponential modified 2","Exponential modified 3","Exponential modified 4"), c(), size = 12, multiple = TRUE)
+               "Relative Oviposition" = chooserInput("modelo", "Available", "Selected", c("Gamma", "Weibull","Exponential modified 1","Exponential modified 2","Exponential modified 3","Exponential modified 4"), c(), size = 12, multiple = TRUE),
+               "Transmission Rate" = chooserInput("modelo", "Available", "Selected", c("Shape & DeMichele 1","Shape & DeMichele 2","Shape & DeMichele 3","Shape & DeMichele 4","Shape & DeMichele 5","Shape & DeMichele 6","Shape & DeMichele 7","Shape & DeMichele 8","Shape & DeMichele 9","Shape & DeMichele 10","Shape & DeMichele 11","Shape & DeMichele 12","Shape & DeMichele 13","Shape & DeMichele 14","Deva 2","Logan 1","Briere 1","Stinner 1","Stinner 2","Stinner 3","Stinner 4","Latin 2","Kontodimas 1","Janish 1","Janish 2","Ratkowsky 1","Ratkowsky 2","Hilber y logan 1","Hilber y logan 2","Exponential simple","Tb Model","Exponential Model","Davidson","Pradham 1","Allahyari","Tanigoshi","Taylor"), c(), size = 12, multiple = TRUE)
   )
   print(ImML)
 }
@@ -57,7 +59,8 @@ ImputModelListNX<-function(ModSelected)
                "Mortality" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 100, value = c(0,45), step= 5),
                "Senescence" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 100, value = c(0,45), step= 5),
                "Total Oviposition" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 100, value = c(0,45), step= 5),
-               "Relative Oviposition" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 10, value = c(0,4), step= 0.5)
+               "Relative Oviposition" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 10, value = c(0,4), step= 0.5),
+               "Transmission Rate" = sliderInput("nx", h4("Range of the x axis:"),min = 0, max = 100, value = c(0,45), step= 5),
   )
   print(ImML)
 }
@@ -71,7 +74,8 @@ ImputModelListNY<-function(ModSelected)
                "Mortality" = sliderInput("ny", h4("Range of the y axis in %:"),min = 0, max = 100, value = c(0,100), step= 5),
                "Senescence" = sliderInput("ny", h4("Range of the y axis:"),min = 0, max = 3, value = c(0,1), step= 0.1),
                "Total Oviposition" = sliderInput("ny", h4("Range of the y axis:"),min = 0, max = 1000, value = c(0,200), step= 10),
-               "Relative Oviposition" = sliderInput("ny", h4("Range of the y axis:"),min = 0, max = 100, value = c(0,100), step= 10)
+               "Relative Oviposition" = sliderInput("ny", h4("Range of the y axis:"),min = 0, max = 100, value = c(0,100), step= 10),
+               "Transmission Rate" = sliderInput("ny", h4("Range of the y axis:"),min = 0, max = 3, value = c(0,1), step= 0.1),
   )
   print(ImML)
 }
@@ -978,7 +982,6 @@ DevRate <- function(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny,saveSelec=FALSE)
 }
 
 
-
 #########################################################################################################################
 # Mortality procedure
 
@@ -1274,6 +1277,80 @@ RelOvi <- function(path,est,modelo,PosModel,OPTplot=TRUE,nx,ny,saveSelec=FALSE)
 
 
 #########################################################################################################################
+# Transmission Rate procedure
+
+TransmRate <- function(path,Namflucfile,modelo,PosModel,OPTplot=TRUE,nx,ny,saveSelec=FALSE) ### Falta terminar este Codigo!!!!!
+{
+  #source("D:/_BK-D/Pablo/R archivos/shiny-Examples/041-dynamic-ui-ILCYM/lib/dev_rate_new.r")
+  #path<-"D:/LH/Paratrioza-Cohort-2016"
+  load(paste(path,"/PhenologySims.RData",sep=""))
+  load(paste(path,"/PhenologyStats.RData",sep=""))
+  estadios<-params$estadios
+  
+  #Namflucfile<-input$transmfile
+  datashap0<-read.table(Namflucfile$datapath[1])
+
+  #datashap0<-read.table("D:/LH/Transmission Files/TransmissionData.txt")
+  
+  #datashap0 <- report$fenologia[[1]][[(1:length(estadios))[estadios==est]]][,c(1,5,6,7)] # putting only the necessesary
+  #datashap <- data.frame(x=datashap0[,1],y=1/datashap0[,2],Lower=1/datashap0[,4],Upper=1/datashap0[,3])
+  datashap <- data.frame(x=datashap0[,1],y=datashap0[,2],Lower=datashap0[,2],Upper=datashap0[,2])
+  datashap2 <- datashap; colnames(datashap2)=c("x","y","y","y")
+  datao=rbind(datashap2[,c(1,2)],datashap2[,c(1,3)],datashap2[,c(1,4)])
+  
+  IDname<-modelo[PosModel] # al final se va a editar
+  #IDname<-"Tb Model"
+  Temp<-DRmodels(IDname,datashap) ## Verificar
+  for(i in 1:length(Temp$NamesO)){assign((Temp$NamesO)[i],(Temp$Objs)[[i]])}
+  
+  #jpeg(paste(path,"/temporal.jpg",sep=""))
+  shapprueba<-prueba(model,datashap,datao,ini,corrx=c(0,55),corry=c(0,0.9),punt=1:6,labx="X",laby="Y",titulo="Title",grises=T)
+  #dev.off()
+  
+  ini<-shapprueba$ini
+  coefi<-shapprueba$coefi
+  p<-shapprueba$p
+  
+  shap<-shape(model,datashap,datao,ini,coefi)
+  estshap<-shap$estimados
+  g<-shap$f
+  p<-shap$p
+  stderro<-shap$stderro
+  
+  sol_develop<-stat_develop(model,datashap,datao,estshap,coefi,stderro)    
+  qtt<-sol_develop$q
+  sdli<-sol_develop$sdli
+  
+  #ny<-c(0,1)
+  TempNY<-seq(ny[1],ny[2],length.out=round((ny[2]-ny[1])/(0.1*(ny[2]-0))))
+  scaleY<-TempNY[2]-TempNY[1];Scales<-c(0.01,0.02,0.04,0.05,0.1,0.2,0.4,0.5)
+  DEuq<-(scaleY-Scales)^2
+  scaleY<-Scales[DEuq==min(DEuq)]
+  
+  # if(saveSelec){IDname=""}
+  #nx<-c(0,50)
+  est<-estadios[length(estadios)-1]
+  if(OPTplot){
+    plot_shape<-grafshape(model,estshap,datashap,qtt,sdli,corrx=c(nx[1],nx[2]), corry=c(ny[1],ny[2]),mini=0,maxi=100,coefi,limit="yes",1,labx=expression(paste("temperature (", degree, "C)")), titulo=IDname,laby="Development rate (1/days)", grises=FALSE, scaleY=scaleY, scaleX=5, est=est, estadios=estadios)
+  }
+
+  if(saveSelec){
+    report$fenologia$TransmRate<-datashap
+    params$transm$ftr_tr <- sol_develop$ecuaci
+    tempPAR<-sol_develop$parmer;tempPAR2<-sol_develop$parmer
+    if(is.matrix(tempPAR) || is.data.frame(tempPAR)){tempPAR2<-c(as.matrix(tempPAR[1,]));names(tempPAR2)<-colnames(tempPAR);rm(tempPAR)}
+    params$transm$ptr_tr <- tempPAR2
+    params$transm$StEr_TRate <- sol_develop$Std.Error
+    params$modeltransm<-model
+
+    save(report, file = paste(path,"/PhenologyStats.RData",sep=""))
+    save(params, file = paste(path,"/PhenologySims.RData",sep=""))
+  }
+  rm(list=ls())
+}
+
+
+#########################################################################################################################
 # Deterministic simulation procedure - Constant temperature
 
 DeteSim <- function(path,N,M,Vtempt,Intv,OPTplot=TRUE)
@@ -1361,7 +1438,7 @@ DeteSimFluc <- function(path,numIni,Table,OPTplot=TRUE,xlegend=300)
     grafSimDete(matrizOut, estadios, labx,laby,titulo,lgx,lgy,corrx1,corrx2)
   }
   
-  rm(list=ls())  
+  rm(list=ls())
 }
 
 #########################################################################################################################
@@ -1371,7 +1448,7 @@ DeteSimVal <- function(path,vidalife,Table,OPTplot=TRUE,xlegend=300)
 {
   #source('D:/_BK-D/Pablo/R archivos/shiny-Examples/041-dynamic-ui-ILCYM/lib/validate.r')
   load(paste(path,"/PhenologySims.RData",sep=""))
-  #load('D:/ILCYM/workspace/Phthorimaea Operculella Project/PhenologySims.RData')
+  #load('D:/LH/PhthorimaeaOperculella-Cohort-Nuevo/PhenologySims.RData')
   #Table<-read.table("D:/LH/Data validacion de PTM/temp fluctuante.txt") # 
   Table ## OK
   #vidalife <- read.table("D:/LH/Data validacion de PTM/tabla de vida 1.txt") # datos de tabla de vida
@@ -1447,6 +1524,49 @@ GeoSimFluc <- function(dir,Index=NULL,brks=NULL,HistRange=FALSE)
     cap=raster(INDX)
     rng <- c(minValue(cap), maxValue(cap))
     if(Index=="ERI"){
+      brks <- as.numeric(as.character(unlist(strsplit(brks, ","))))
+      cols <- c("gray70",brewer.pal(9, "Greens")[8:5],brewer.pal(8, "YlOrRd")[2:5],"#8C510A",brewer.pal(8, "YlOrRd")[7])
+      ZLIM <- c(0,1)
+    }else{
+      brks <- as.numeric(as.character(unlist(strsplit(brks, ","))))
+      cols <- c("gray70","aquamarine4","chartreuse2","yellow","darkorange2","#8C510A","firebrick2")
+      ZLIM <- c(0,rng[2])
+    }
+    #png(paste(dir,"/",Index,".png",sep=""), width = 14, height = 10, units = 'in', res = 300)
+    data(wrld_simpl)
+    plot(cap, breaks=brks, col=cols,zlim=ZLIM,axis.args=list(cex.axis=1.2),legend.width=1.2)
+    plot(wrld_simpl, lwd=0.8, col="transparent",add=TRUE)
+    #dev.off()
+    rm(INDX);rm(cap)
+  }
+}
+
+#########################################################################################################################
+# Geographic simulation procedure for Transmission
+
+GeoSimFlucT <- function(dir,Index=NULL,brks=NULL,HistRange=FALSE)
+{
+  if(!is.null(Index)){nombreINDX <- switch(Index,"PT"="ITT.asc","PAT"="PTP.asc")}
+  if(HistRange){
+    par(mfrow=c(1,2))
+
+    PT = readAsciiGrid(paste(dir,"/","ITT.asc",sep=""))  ### extraemos la variable de altura
+    cap=raster(PT)
+    rng <- c(minValue(cap), maxValue(cap))
+    hist(cap,main="PT",xlab=paste("min=",rng[1]," and max=",rng[2],sep=""))
+    rm(PT);rm(cap)
+
+    PAT = readAsciiGrid(paste(dir,"/","PTP.asc",sep=""))  ### extraemos la variable de altura
+    cap=raster(PAT)
+    rng <- c(minValue(cap), maxValue(cap))
+    hist(cap,main="PAT",xlab=paste("min=",rng[1]," and max=",rng[2],sep=""))
+    rm(PAT);rm(cap)
+
+  }else{
+    INDX = readAsciiGrid(paste(dir,"/",nombreINDX,sep=""))  ### extraemos la variable de altura
+    cap=raster(INDX)
+    rng <- c(minValue(cap), maxValue(cap))
+    if(Index=="PT"){
       brks <- as.numeric(as.character(unlist(strsplit(brks, ","))))
       cols <- c("gray70",brewer.pal(9, "Greens")[8:5],brewer.pal(8, "YlOrRd")[2:5],"#8C510A",brewer.pal(8, "YlOrRd")[7])
       ZLIM <- c(0,1)
