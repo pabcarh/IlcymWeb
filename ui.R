@@ -45,7 +45,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",title=tags$b("ILCYM  Web",tags$im
                                 actionButton("do2", "Open Project",icon=icon("folder-open"), class = "btn-primary")
                               ),
                               column(6,
-                                selectInput('modules', h4('2. Select a variable'), c("Development Time","Development Rate","Mortality","Senescence","Total Oviposition","Relative Oviposition"), multiple=FALSE, selectize=FALSE),
+                                selectInput('modules', h4('2. Select a variable'), c("Development Time","Development Rate","Mortality","Senescence","Total Oviposition","Relative Oviposition","Transmission Rate"), multiple=FALSE, selectize=FALSE),
                                 uiOutput("choicesMOD1")
                               )
                             ),
@@ -180,7 +180,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",title=tags$b("ILCYM  Web",tags$im
                                 sidebarLayout(
                                   sidebarPanel(
                                     wellPanel(
-                                      h3("Risk Indexes acording ILCYM 3.0"),
+                                      h3("Risk Indices according ILCYM 3.0"),
                                       textInput("PathClimDat", "FLT files location", value = "no data"),
                                       actionButton("do5", "Load",icon=icon("database")),
                                       br()
@@ -219,7 +219,48 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",title=tags$b("ILCYM  Web",tags$im
                                     )
                                   )
                                 )
+                              ),
+                              tabPanel("Geographical Simulation for Transmission",icon=icon("map"),
+                                       sidebarLayout(
+                                         sidebarPanel(
+                                           wellPanel(
+                                             h3("Transmission Indices according ILCYM 3.0"),
+                                             textInput("PathClimDatT", "FLT files location", value = "no data"),
+                                             actionButton("do9", "Load",icon=icon("database")),
+                                             br()
+                                           ),
+                                           conditionalPanel(
+                                             'input.PathClimDatT !== "no data"',
+                                             fluidRow(column(12,wellPanel(
+                                               numericInput("DivExtentT", "Number of the extent division", value = 8,min=1,max=20,step=1),
+                                               textInput("NameFolderIndexT", "Folder name", value = "Risk Index"),
+                                               br(),
+                                               actionButton("do10", "Generate raster",icon=icon("flash"))
+                                             ))
+                                             )
+                                           ),
+                                           conditionalPanel(
+                                             'input.NameFolderIndexT === "Ready"',
+                                             fluidRow(column(12,wellPanel(
+                                               textInput("rangePT", "Potential Transmission:", value = "0,0.1,0.20,0.3,0.4,0.5,0.6,0.7,0.80,0.9,0.95,1"),
+                                               br(),
+                                               textInput("rangePAT", "Potential Activity of Transmission:", value = "0,1,2,3,4,5,6,8"),
+                                               br(),
+                                               actionButton("do11", "Generate Maps",icon=icon("flash"))
+                                             ))
+                                             )
+                                           )
+                                           ,
+                                           br()
+                                         ),
+                                         mainPanel(
+                                           tabsetPanel(
+                                             tabPanel("Raster Summary", plotOutput("geosimplot0T")),
+                                             tabPanel("Potential Transmission", plotOutput("geosimplot1T")),
+                                             tabPanel("Potential Activity of Transmission", plotOutput("geosimplot2T"))
+                                           )
+                                         )
+                                       )
                               )
-                     
                    )
 ))
